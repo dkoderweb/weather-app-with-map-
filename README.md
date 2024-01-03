@@ -18,7 +18,7 @@ Follow these steps to set up and run the project locally:
 
 3. **Copy the example environment file:**
    ```bash
-   cp example.env .env
+   cp .env.example .env
    ```
 
 4. **Configure your environment variables:**
