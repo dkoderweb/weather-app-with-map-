@@ -26,7 +26,16 @@
                 @csrf
                 <input type="hidden" name="latitude" id="latitudeInput">
                 <input type="hidden" name="longitude" id="longitudeInput">
-                <input type="text" name="cityInput" id="cityInput" required placeholder="Enter city name">
+                <input type="text"   @if(isset($currentWeather)) value="{{ $currentWeather['city'] }}" @endif name="cityInput" id="cityInput" required placeholder="Enter city name">
+                <label>
+                    <input type="radio" name="unit" value="celsius" {{ session('unit', 'celsius') == 'celsius' ? 'checked' : '' }}>
+                    Celsius
+                </label>
+                <label>
+                    <input type="radio" name="unit" value="fahrenheit" {{ session('unit', 'celsius') == 'fahrenheit' ? 'checked' : '' }}>
+                    Fahrenheit
+                </label>
+                
                 <button type="submit">Search</button>
             </form>
         </div>
@@ -43,7 +52,13 @@
                         <div class="forecast-content">
                             <div class="location">{{ $currentWeather['city'] }}</div>
                             <div class="degree">
-                                <div class="num">{{ $currentWeather['temperature'] }}<sup>o</sup>C</div>
+                                <div class="num">
+                                    @if(session('unit', 'celsius') == 'celsius')
+                                        {{ $currentWeather['temperature'] }}<sup>o</sup>C
+                                    @else
+                                        {{ $currentWeather['temperature'] }}<sup>o</sup>F
+                                    @endif
+                                </div>
                                 <div class="forecast-icon">
                                     <img src="https://openweathermap.org/img/wn/{{ $currentWeather['icon'] }}.png" alt="" width=90>
                                 </div>
@@ -64,7 +79,13 @@
                                 <div class="forecast-icon">
                                     <img src="https://openweathermap.org/img/wn/{{ $forecast['icon'] }}.png" alt="" width="48">
                                 </div>
-                                <div class="degree">{{ $forecast['temperature'] }}<sup>o</sup>C</div>
+                                <div class="degree">
+                                    @if(session('unit', 'celsius') == 'celsius')
+                                        {{ $forecast['temperature'] }}<sup>o</sup>C
+                                    @else
+                                        {{ $forecast['temperature'] }}<sup>o</sup>F
+                                    @endif
+                                </div>
                                 <small>{{ $forecast['windSpeed'] }}<sup>o</sup></small>
                             </div>
                         </div>

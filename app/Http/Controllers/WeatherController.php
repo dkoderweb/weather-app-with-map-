@@ -22,6 +22,8 @@ class WeatherController extends Controller
         $longitude = $request->input('longitude');
 
         try {
+            $unit = $request->input('unit', 'celsius');
+            session(['unit' => $unit]);
             if (!empty($cityInput)) {
                 $currentWeather = $this->fetchCurrentWeather($cityInput, $apiKey);
                 $fiveDayForecast = $this->fetchFiveDayForecast($cityInput, $apiKey);
@@ -122,7 +124,16 @@ class WeatherController extends Controller
 
     private function formatWeatherData($data)
     {
-        $temperature = round($data['main']['temp'] - 273.15);
+        
+        $temperatureInKelvin = $data['main']['temp'];
+        $unit = session('unit', 'celsius');
+    
+        if ($unit == 'fahrenheit') {
+            $temperature = round(($temperatureInKelvin * 9/5) - 459.67);
+        } else {
+            $temperature = round($temperatureInKelvin - 273.15);
+        }
+        
         $icon = $data['weather'][0]['icon'];
         $humidity = $data['main']['humidity'];
         $windSpeed = $data['wind']['speed'];
@@ -145,16 +156,24 @@ class WeatherController extends Controller
     {
         $forecastData = $data['list'];
         $filteredForecast = [];
-
+    
         $tomorrow = now()->addDay()->startOfDay();
-
+    
         foreach ($forecastData as $forecast) {
             $forecastDate = now()->setTimestamp($forecast['dt']);
             if ($forecastDate >= $tomorrow && count($filteredForecast) < 5) {
-                $temperature = round($forecast['main']['temp'] - 273.15);
+                $temperatureInKelvin = $forecast['main']['temp'];
+                $unit = session('unit', 'celsius');
+    
+                if ($unit == 'fahrenheit') {
+                    $temperature = round(($temperatureInKelvin * 9/5) - 459.67);
+                } else {
+                    $temperature = round($temperatureInKelvin - 273.15);
+                }
+    
                 $icon = $forecast['weather'][0]['icon'];
                 $day = $forecastDate->format('l');
-
+    
                 $filteredForecast[] = [
                     'day' => $day,
                     'temperature' => $temperature,
@@ -163,7 +182,8 @@ class WeatherController extends Controller
                 ];
             }
         }
-
+    
         return $filteredForecast;
     }
+    
 }
