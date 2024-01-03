@@ -5,12 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 
-    <title>Compass Starter by Ariona, Rian</title>
+    <title>Weather App</title>
 
     <!-- Loading third party fonts -->
     <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,700|" rel="stylesheet" type="text/css">
     <link href="fonts/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
     <!-- Loading main CSS file -->
     <link rel="stylesheet" href="style.css">
@@ -26,7 +27,7 @@
                 @csrf
                 <input type="hidden" name="latitude" id="latitudeInput">
                 <input type="hidden" name="longitude" id="longitudeInput">
-                <input type="text"   @if(isset($currentWeather)) value="{{ $currentWeather['city'] }}" @endif name="cityInput" id="cityInput" required placeholder="Enter city name">
+                <input type="text" name="cityInput" id="cityInput" required placeholder="Enter city name" @if(isset($currentWeather)) value="{{ $currentWeather['city'] }}" @endif>
                 <label>
                     <input type="radio" name="unit" value="celsius" {{ session('unit', 'celsius') == 'celsius' ? 'checked' : '' }}>
                     Celsius
@@ -94,6 +95,8 @@
             </div>
         </div>
     </div>
+    <div id="map" style="height: 400px;"></div>
+
     <footer class="site-footer">
     </footer>
 </div>
@@ -102,9 +105,24 @@
 <script src="js/plugins.js"></script>
 <script src="js/app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-    function currentLocation(){
+    var map = L.map('map').setView([0, 0], 2);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Display current weather marker
+    @if(isset($currentWeather) && !empty($currentWeather['latitude']) && !empty($currentWeather['longitude']))
+        var currentWeatherMarker = L.marker([{{ $currentWeather['latitude'] }}, {{ $currentWeather['longitude'] }}])
+            .addTo(map)
+            .bindPopup("<b>{{ $currentWeather['city'] }}</b><br>Temperature: {{ $currentWeather['temperature'] }}°{{ session('unit', 'C') }}<br>Humidity: {{ $currentWeather['humidity'] }}%<br>Wind: {{ $currentWeather['windSpeed'] }} km/h");
+    @endif
+ 
+
+    function currentLocation() {
         const formSubmittedFlag = sessionStorage.getItem('formSubmitted');
 
         if (!formSubmittedFlag && navigator.geolocation) {
@@ -125,6 +143,7 @@
             console.error('Geolocation is not supported by this browser or the form has already been submitted.');
         }
     }
+
     document.addEventListener("DOMContentLoaded", function () {
         currentLocation()
     });
@@ -133,15 +152,12 @@
         @if($error == 'City not found')
             toastr.error('City not found. Please enter a valid city name.');
             sessionStorage.removeItem('formSubmitted');
-            currentLocation()   
+            currentLocation()
         @else
-                toastr.error('Error: {{ $error }}');
+            toastr.error('Error: {{ $error }}');
         @endif
     @endif
-
 </script>
 
-
 </body>
-
 </html>

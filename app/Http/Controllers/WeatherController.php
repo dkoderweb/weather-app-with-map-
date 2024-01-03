@@ -58,9 +58,9 @@ class WeatherController extends Controller
 
         if ($response->successful()) {
             $data = $response->json();
-            $weatherData = $this->formatWeatherData($data);
+            $weatherData = $this->formatWeatherData($data); 
 
-            Cache::put($cacheKey, $weatherData, 60);
+            Cache::put($cacheKey,  60);
 
             return $weatherData;
         }
@@ -88,15 +88,17 @@ class WeatherController extends Controller
             $data = $response->json();
             $forecastData = $this->filterFiveDayForecast($data);
 
+            
+
             // Cache the result for 1 hour (adjust as needed)
-            Cache::put($cacheKey, $forecastData, 60);
+            Cache::put($cacheKey,  60);
 
             return $forecastData;
         }
 
         Log::error('Error fetching five-day forecast data: ' . $response->status());
         throw new \Exception('Error fetching five-day forecast data: ' . $response->status());
-    }
+    } 
 
     private function fetchCurrentWeatherByCoordinates($latitude, $longitude, $apiKey)
     {
@@ -124,7 +126,7 @@ class WeatherController extends Controller
 
     private function formatWeatherData($data)
     {
-        
+        // dump($data);
         $temperatureInKelvin = $data['main']['temp'];
         $unit = session('unit', 'celsius');
     
@@ -133,14 +135,16 @@ class WeatherController extends Controller
         } else {
             $temperature = round($temperatureInKelvin - 273.15);
         }
-        
+    
         $icon = $data['weather'][0]['icon'];
         $humidity = $data['main']['humidity'];
         $windSpeed = $data['wind']['speed'];
         $city = $data['name'];
         $day = now()->format('l');
         $date = now()->format('j M');
-
+        $latitude = isset($data['coord']['lat']) ? $data['coord']['lat'] : null;
+        $longitude = isset($data['coord']['lon']) ? $data['coord']['lon'] : null;
+    
         return [
             'day' => $day,
             'date' => $date,
@@ -149,8 +153,11 @@ class WeatherController extends Controller
             'icon' => $icon,
             'humidity' => $humidity,
             'windSpeed' => $windSpeed,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
         ];
     }
+    
 
     private function filterFiveDayForecast($data)
     {
