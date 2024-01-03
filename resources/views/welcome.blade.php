@@ -25,9 +25,11 @@
         <div class="container">
             <form id="weatherSearchForm" action="{{ route('getWeather') }}" method="post">
                 @csrf
-                <input type="hidden" name="latitude" id="latitudeInput">
-                <input type="hidden" name="longitude" id="longitudeInput">
-                <input type="text" name="cityInput" id="cityInput" required placeholder="Enter city name" @if(isset($currentWeather)) value="{{ $currentWeather['city'] }}" @endif>
+                <input type="hidden" @if(isset($currentWeather)) value="{{ $currentWeather['latitude'] }}" @endif name="latitude" id="latitudeInput">
+                <input type="hidden" @if(isset($currentWeather)) value="{{ $currentWeather['longitude'] }}" @endif name="longitude" id="longitudeInput">
+                <input type="text" name="cityInput" id="cityInput"   placeholder="Enter city name">
+                {{-- <input type="text" name="cityInput" id="cityInput" required placeholder="Enter city name" @if(isset($currentWeather)) value="{{ $currentWeather['city'] }}" @endif> --}}
+
                 <label>
                     <input type="radio" name="unit" value="celsius" {{ session('unit', 'celsius') == 'celsius' ? 'checked' : '' }}>
                     Celsius
@@ -106,7 +108,6 @@
 <script src="js/app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
     var map = L.map('map').setView([0, 0], 2);
 
@@ -120,7 +121,14 @@
             .addTo(map)
             .bindPopup("<b>{{ $currentWeather['city'] }}</b><br>Temperature: {{ $currentWeather['temperature'] }}°{{ session('unit', 'C') }}<br>Humidity: {{ $currentWeather['humidity'] }}%<br>Wind: {{ $currentWeather['windSpeed'] }} km/h");
     @endif
- 
+
+    // Add an event listener to the map for click events
+    map.on('click', function(e) {
+        document.getElementById("latitudeInput").value = e.latlng.lat;
+        document.getElementById("longitudeInput").value = e.latlng.lng;
+        sessionStorage.setItem('formSubmitted', 'true');
+        document.getElementById("weatherSearchForm").submit();
+    });
 
     function currentLocation() {
         const formSubmittedFlag = sessionStorage.getItem('formSubmitted');
@@ -158,6 +166,7 @@
         @endif
     @endif
 </script>
+
 
 </body>
 </html>

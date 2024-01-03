@@ -144,6 +144,7 @@ class WeatherController extends Controller
         $date = now()->format('j M');
         $latitude = isset($data['coord']['lat']) ? $data['coord']['lat'] : null;
         $longitude = isset($data['coord']['lon']) ? $data['coord']['lon'] : null;
+
     
         return [
             'day' => $day,
