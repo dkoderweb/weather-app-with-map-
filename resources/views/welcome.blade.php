@@ -23,8 +23,7 @@
 <div class="site-content">
     <div class="hero" data-bg-image="images/banner.png">
         <div class="container">
-            <form id="weatherSearchForm" action="{{ route('getWeather') }}" method="post">
-                @csrf
+            <form id="weatherSearchForm" action="{{ route('getWeather') }}" method="get"> 
                 <input type="hidden" @if(isset($currentWeather)) value="{{ $currentWeather['latitude'] }}" @endif name="latitude" id="latitudeInput">
                 <input type="hidden" @if(isset($currentWeather)) value="{{ $currentWeather['longitude'] }}" @endif name="longitude" id="longitudeInput">
                 <input type="text" name="cityInput" id="cityInput"   placeholder="Enter city name">

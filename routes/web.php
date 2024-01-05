@@ -20,4 +20,4 @@ Route::get('/', function () {
 });
 
 Route::get('/', [WeatherController::class, 'index'])->name('index');
-Route::post('/weather', [WeatherController::class, 'getWeather'])->name('getWeather');
+Route::get('/weather', [WeatherController::class, 'getWeather'])->name('getWeather');
