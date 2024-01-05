@@ -27,13 +27,11 @@ class WeatherController extends Controller
             if (!empty($cityInput)) {
                 $currentWeather = $this->fetchCurrentWeather($cityInput, $apiKey);
                 $fiveDayForecast = $this->fetchFiveDayForecast($cityInput, $apiKey);
-            } elseif (!empty($latitude) && !empty($longitude)) {
+            } else {
                 $currentWeather = $this->fetchCurrentWeatherByCoordinates($latitude, $longitude, $apiKey);
                 $fiveDayForecast = $this->fetchFiveDayForecastByCoordinates($latitude, $longitude, $apiKey);
-            } else {
-                return redirect()->route('index');
-            }
-
+            }  
+            // dd($currentWeather, $fiveDayForecast);
             return view('welcome', [
                 'currentWeather' => $currentWeather,
                 'fiveDayForecast' => $fiveDayForecast,
@@ -58,9 +56,10 @@ class WeatherController extends Controller
 
         if ($response->successful()) {
             $data = $response->json();
-            $weatherData = $this->formatWeatherData($data); 
+            $weatherData = $this->formatWeatherData($data);
 
-            Cache::put($cacheKey,  60);
+            // Cache the formatted weather data for 60 minutes
+            Cache::put($cacheKey, $weatherData, 60);
 
             return $weatherData;
         }
@@ -73,40 +72,52 @@ class WeatherController extends Controller
         throw new \Exception('Error fetching current weather data: ' . $response->status());
     }
 
+
     private function fetchFiveDayForecast($cityName, $apiKey)
     {
         $cacheKey = 'five_day_forecast_' . $cityName;
         $cachedForecast = Cache::get($cacheKey);
-
+    
         if ($cachedForecast) {
             return $cachedForecast;
         }
-
+    
         $response = Http::get("https://api.openweathermap.org/data/2.5/forecast?q={$cityName}&appid={$apiKey}");
-
+    
         if ($response->successful()) {
             $data = $response->json();
             $forecastData = $this->filterFiveDayForecast($data);
-
-            
-
-            // Cache the result for 1 hour (adjust as needed)
-            Cache::put($cacheKey,  60);
-
+    
+            // Cache the forecast data for 1 hour (adjust as needed)
+            Cache::put($cacheKey, $forecastData, 60);
+    
             return $forecastData;
         }
-
+    
         Log::error('Error fetching five-day forecast data: ' . $response->status());
         throw new \Exception('Error fetching five-day forecast data: ' . $response->status());
-    } 
+    }
+    
 
     private function fetchCurrentWeatherByCoordinates($latitude, $longitude, $apiKey)
     {
+        $cacheKey = 'current_weather_lat_lon_' . $latitude . '_' . $longitude;
+        $cachedWeather = Cache::get($cacheKey);
+
+        if ($cachedWeather) {
+            return $cachedWeather;
+        }
+
         $response = Http::get("https://api.openweathermap.org/data/2.5/weather?lat={$latitude}&lon={$longitude}&appid={$apiKey}");
 
         if ($response->successful()) {
             $data = $response->json();
-            return $this->formatWeatherData($data);
+            $weatherData = $this->formatWeatherData($data);
+
+            // Cache the formatted weather data for 60 minutes (adjust as needed)
+            Cache::put($cacheKey, $weatherData, 60);
+
+            return $weatherData;
         }
 
         throw new \Exception('Error fetching current weather data: ' . $response->status());
@@ -114,15 +125,28 @@ class WeatherController extends Controller
 
     private function fetchFiveDayForecastByCoordinates($latitude, $longitude, $apiKey)
     {
+        $cacheKey = 'five_day_forecast_lat_lon_' . $latitude . '_' . $longitude;
+        $cachedForecast = Cache::get($cacheKey);
+
+        if ($cachedForecast) {
+            return $cachedForecast;
+        }
+
         $response = Http::get("https://api.openweathermap.org/data/2.5/forecast?lat={$latitude}&lon={$longitude}&appid={$apiKey}");
 
         if ($response->successful()) {
             $data = $response->json();
-            return $this->filterFiveDayForecast($data);
+            $forecastData = $this->filterFiveDayForecast($data);
+
+            // Cache the forecast data for 60 minutes (adjust as needed)
+            Cache::put($cacheKey, $forecastData, 60);
+
+            return $forecastData;
         }
 
         throw new \Exception('Error fetching five-day forecast data: ' . $response->status());
     }
+
 
     private function formatWeatherData($data)
     {
